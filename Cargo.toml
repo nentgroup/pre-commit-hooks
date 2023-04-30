@@ -1,6 +1,6 @@
 [package]
 name = "pre-commit-hooks"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Seto Elkahfi <setoelkahfi@gmail.com>"]
 build = "build.rs"
 description = "Reads hooks metadata from Cargo.toml and executes on commit. Works with workspace format."
@@ -10,4 +10,3 @@ readme = "README.md"
 
 [build-dependencies]
 toml = "0.7"
-rustc-serialize = "0.3"
