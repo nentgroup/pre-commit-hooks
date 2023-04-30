@@ -10,4 +10,3 @@ readme = "README.md"
 
 [build-dependencies]
 toml = "0.7"
-rustc-serialize = "0.3"
