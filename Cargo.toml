@@ -1,0 +1,13 @@
+[package]
+name = "pre-commit-hooks"
+version = "0.1.0"
+authors = ["Seto Elkahfi <setoelkahfi@gmail.com>"]
+build = "build.rs"
+description = "Reads hooks metadata from Cargo.toml and executes on commit. Works with workspace format."
+license = "MIT"
+repository = "https://github.com/setoelkahfi/pre-commit-hooks"
+readme = "README.md"
+
+[build-dependencies]
+toml = "0.7"
+rustc-serialize = "0.3"
