@@ -1,7 +1,7 @@
 [package]
 name = "pre-commit-hooks"
-version = "0.1.1"
-authors = ["Seto Elkahfi <setoelkahfi@gmail.com>"]
+version = "0.2.0"
+authors = ["Joe Grund <grundjoseph@gmail.com>", "Seto Elkahfi <setoelkahfi@gmail.com>"]
 build = "build.rs"
 description = "Reads hooks metadata from Cargo.toml and executes on commit. Works with workspace format."
 license = "MIT"
