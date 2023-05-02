@@ -3,11 +3,19 @@ use std::os::unix::fs::PermissionsExt;
 use std::{env, fs, io, path};
 
 fn main() {
-    copy_file().unwrap();
+    match setup_pre_commit_hooks() {
+        Ok(_) => {
+            println!("Successfully set up pre-commit hooks.");
+        }
+        Err(e) => {
+            println!("Error setting up pre-commit hooks: {e}.");
+            std::process::exit(1);
+        }
+    }
 }
 
 fn find_crate_root(p: &path::Path) -> io::Result<&path::Path> {
-    println!("Looking for root in {p:?}");
+    println!("Looking for root in {p:?}.");
 
     if p.join("Cargo.toml").exists() {
         return Ok(p);
@@ -19,12 +27,12 @@ fn find_crate_root(p: &path::Path) -> io::Result<&path::Path> {
         Some(p) => return find_crate_root(p),
         None => Err(io::Error::new(
             io::ErrorKind::NotFound,
-            "Crate root not found",
+            "Crate root not found.",
         )),
     }
 }
 
-fn copy_file() -> io::Result<()> {
+fn setup_pre_commit_hooks() -> io::Result<()> {
     let out = &env::var("OUT_DIR").unwrap();
     let p = path::Path::new(out);
     let root = find_crate_root(p)?;
@@ -35,7 +43,7 @@ fn copy_file() -> io::Result<()> {
 
     let hooks_dir = root.join(".git").join("hooks");
 
-    println!("Hooks dir {hooks_dir:?}");
+    println!("Hooks dir {hooks_dir:?}.");
 
     if !hooks_dir.exists() {
         return Ok(());
