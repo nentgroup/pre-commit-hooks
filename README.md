@@ -37,3 +37,7 @@ $ cargo build
 ```
 
 You should now have a `pre-commit` file in your `./git/hooks` that will run the listed pre-commit entries.
+
+# Credit
+
+The `find_crate_root` function is refactored with the help of [emilgardis](https://github.com/emilgardis).
