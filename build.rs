@@ -1,32 +1,60 @@
+use std::fs::File;
 use std::io::prelude::*;
 use std::os::unix::fs::PermissionsExt;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::{env, fs, io, path};
 
 fn main() {
-    copy_file().unwrap();
-}
-
-fn find_crate_root(p: &path::Path) -> io::Result<&path::Path> {
-    println!("Looking for root in {p:?}");
-
-    if p.join("Cargo.toml").exists() {
-        return Ok(p);
-    }
-
-    let parent = p.parent();
-
-    match parent {
-        Some(p) => return find_crate_root(p),
-        None => Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            "Crate root not found",
-        )),
+    match setup_pre_commit_hooks() {
+        Ok(_) => {
+            println!("Successfully set up pre-commit hooks.");
+        }
+        Err(e) => {
+            println!("Error setting up pre-commit hooks: {e}.");
+            std::process::exit(1);
+        }
     }
 }
 
-fn copy_file() -> io::Result<()> {
+fn find_crate_root(p: &Path) -> io::Result<PathBuf> {
+    println!("Looking for root in {p:?}.");
+
+    let meta = Command::new("cargo")
+        .args(["metadata", "--format-version=1", "--no-deps"])
+        .output()?;
+
+    if meta.status.success() {
+        let output = String::from_utf8_lossy(&meta.stdout);
+        let path = if let Some(path) = output.split(r#"workspace_root":""#).nth(1) {
+            path
+        } else {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "couldn't find crate root",
+            ));
+        };
+        let path = if let Some(path) = path.split('"').next() {
+            path
+        } else {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "couldn't find crate root",
+            ));
+        };
+        let path = path::Path::new(path);
+        Ok(path.to_path_buf())
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "couldn't find crate root",
+        ))
+    }
+}
+
+fn setup_pre_commit_hooks() -> io::Result<()> {
     let out = &env::var("OUT_DIR").unwrap();
-    let p = path::Path::new(out);
+    let p = Path::new(out);
     let root = find_crate_root(p)?;
     let mut f = fs::File::open(root.join("Cargo.toml"))?;
     let mut s = String::new();
@@ -35,7 +63,7 @@ fn copy_file() -> io::Result<()> {
 
     let hooks_dir = root.join(".git").join("hooks");
 
-    println!("Hooks dir {hooks_dir:?}");
+    println!("Hooks dir {hooks_dir:?}.");
 
     if !hooks_dir.exists() {
         return Ok(());
@@ -43,7 +71,7 @@ fn copy_file() -> io::Result<()> {
 
     let pre_commit = hooks_dir.join("pre-commit");
 
-    let mut f = fs::File::create(&pre_commit)?;
+    let mut f = File::create(&pre_commit)?;
 
     if cfg!(target_family = "unix") {
         let metadata = f.metadata()?;
