@@ -18,7 +18,7 @@ Add a table like the following to your root `Cargo.toml`:
 
 ```
 [package.metadata.precommit]
-fmt = "cargo fmt -- --write-mode diff 2>&1"
+fmt = "cargo fmt"
 sort = "cargo sort"
 ```
 
