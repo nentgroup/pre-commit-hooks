@@ -5,7 +5,7 @@ authors = ["Joe Grund <grundjoseph@gmail.com>", "Seto Elkahfi <setoelkahfi@gmail
 build = "build.rs"
 description = "Reads hooks metadata from Cargo.toml and executes on commit. Works with workspace format."
 license = "MIT"
-repository = "https://github.com/setoelkahfi/pre-commit-hooks"
+repository = "https://github.com/nentgroup/pre-commit-hooks"
 readme = "README.md"
 
 [build-dependencies]
