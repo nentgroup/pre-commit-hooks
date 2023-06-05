@@ -1,13 +1,13 @@
 # pre-commit-hooks
 
-Reads hooks metadata from Cargo.toml and executes on commit. A forked from unmaintained [pre-commit](https://github.com/rustation/pre-commit).
+Reads hooks metadata from `Cargo.toml` and executes on commit. A forked from unmaintained [pre-commit](https://github.com/rustation/pre-commit).
 
 
 ### Installing
 
 ```
 [dependencies]
-pre-commit-hooks = "0.1"
+pre-commit-hooks = "0.3"
 ```
 
 For a workspace-based setup, one only need to add it in one of the package dependency, usually the main package (if any). This is because the pre-commit applies to the whole project.
@@ -25,7 +25,7 @@ sort = "cargo sort"
 Or, if you're ussing workspace:
 ```
 [workspace.metadata.precommit]
-fmt = "cargo fmt -- --write-mode diff 2>&1"
+fmt = "cargo fmt"
 sort = "cargo sort -w"
 ```
 
