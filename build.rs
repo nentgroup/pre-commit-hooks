@@ -2,8 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::{env, fs, io, path};
+use std::{env, fs, io};
 
 fn main() {
     match setup_pre_commit_hooks() {
@@ -31,7 +30,9 @@ fn find_crate_root(p: &Path) -> io::Result<PathBuf> {
             let mut f = fs::File::open(manifest)?;
             let mut s = String::new();
             f.read_to_string(&mut s)?;
-            if s.contains("[package.metadata.precommit]") || s.contains("[workspace.metadata.precommit]") {
+            if s.contains("[package.metadata.precommit]")
+                || s.contains("[workspace.metadata.precommit]")
+            {
                 println!("Found pre-commit hooks metadata.");
                 return Ok(current);
             }
