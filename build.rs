@@ -17,43 +17,35 @@ fn main() {
     }
 }
 
+// Find the crate root that consists of a Cargo.toml file with the pre-commit hooks metadata.
 fn find_crate_root(p: &Path) -> io::Result<PathBuf> {
     println!("Looking for root in {p:?}.");
 
-    let meta = Command::new("cargo")
-        .args(["metadata", "--format-version=1", "--no-deps"])
-        .output()?;
+    // Find Cargo.toml file with the pre-commit hooks metadata up the directory tree.
+    let mut current = p.to_path_buf();
+    loop {
+        let manifest = current.join("Cargo.toml");
+        if manifest.exists() {
+            println!("Found manifest {manifest:?}.");
+            // Check if there's a pre-commit hooks metadata in the Cargo.toml file.
+            let mut f = fs::File::open(manifest)?;
+            let mut s = String::new();
+            f.read_to_string(&mut s)?;
+            if s.contains("[package.metadata.precommit]") || s.contains("[workspace.metadata.precommit]") {
+                println!("Found pre-commit hooks metadata.");
+                return Ok(current);
+            }
+        }
 
-    print!("cargo metadata stdout: ");
-
-    if meta.status.success() {
-        let output = String::from_utf8_lossy(&meta.stdout);
-        println!("{}", output);
-        let path = if let Some(path) = output.split(r#"workspace_root":""#).nth(1) {
-            path
-        } else {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Couldn't find crate root",
-            ));
-        };
-        print!("Found path: {}", path);
-        let path = if let Some(path) = path.split('"').next() {
-            path
-        } else {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Couldn't find crate root",
-            ));
-        };
-        let path = path::Path::new(path);
-        print!("Found path: {}", path.display());
-        Ok(path.to_path_buf())
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Couldn't find crate root",
-        ))
+        match current.parent() {
+            Some(p) => current = p.to_path_buf(),
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "Could not find pre-commit hooks metadata in Cargo.toml.",
+                ))
+            }
+        }
     }
 }
 
