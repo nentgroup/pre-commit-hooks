@@ -8,5 +8,9 @@ license = "MIT"
 repository = "https://github.com/nentgroup/pre-commit-hooks"
 readme = "README.md"
 
+[package.metadata.precommit]
+# Add your pre-commit configuration here.
+# This section is needed when using this pre-commit-hooks.
+
 [build-dependencies]
 toml = "0.7"
