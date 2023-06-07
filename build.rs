@@ -2,8 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::{env, fs, io, path};
+use std::{env, fs, io};
 
 fn main() {
     match setup_pre_commit_hooks() {
@@ -17,43 +16,42 @@ fn main() {
     }
 }
 
+// Find the crate root that consists of a Cargo.toml file with the pre-commit hooks metadata.
 fn find_crate_root(p: &Path) -> io::Result<PathBuf> {
     println!("Looking for root in {p:?}.");
 
-    let meta = Command::new("cargo")
-        .args(["metadata", "--format-version=1", "--no-deps"])
-        .output()?;
+    // Find Cargo.toml file with the pre-commit hooks metadata up the directory tree.
+    let mut current = p.to_path_buf();
+    loop {
+        let manifest = current.join("Cargo.toml");
+        if manifest.exists() {
+            println!("Found manifest {manifest:?}.");
+            // Check if there's a pre-commit hooks metadata in the Cargo.toml file.
+            let mut f = fs::File::open(manifest)?;
+            let mut s = String::new();
+            f.read_to_string(&mut s)?;
+            if s.contains("[package.metadata.precommit]")
+                || s.contains("[workspace.metadata.precommit]")
+            {
+                println!("Found pre-commit hooks metadata.");
+                return Ok(current);
+            }
+        }
 
-    if meta.status.success() {
-        let output = String::from_utf8_lossy(&meta.stdout);
-        let path = if let Some(path) = output.split(r#"workspace_root":""#).nth(1) {
-            path
-        } else {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "couldn't find crate root",
-            ));
-        };
-        let path = if let Some(path) = path.split('"').next() {
-            path
-        } else {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "couldn't find crate root",
-            ));
-        };
-        let path = path::Path::new(path);
-        Ok(path.to_path_buf())
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "couldn't find crate root",
-        ))
+        match current.parent() {
+            Some(p) => current = p.to_path_buf(),
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "Could not find pre-commit hooks metadata in Cargo.toml.",
+                ))
+            }
+        }
     }
 }
 
 fn setup_pre_commit_hooks() -> io::Result<()> {
-    let out = &env::var("OUT_DIR").unwrap();
+    let out: &String = &env::var("OUT_DIR").unwrap();
     let p = Path::new(out);
     let root = find_crate_root(p)?;
     let mut f = fs::File::open(root.join("Cargo.toml"))?;
@@ -69,7 +67,7 @@ fn setup_pre_commit_hooks() -> io::Result<()> {
         return Ok(());
     }
 
-    let pre_commit = hooks_dir.join("pre-commit");
+    let pre_commit: PathBuf = hooks_dir.join("pre-commit");
 
     let mut f = File::create(&pre_commit)?;
 
